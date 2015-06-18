@@ -1,0 +1,122 @@
+#!/bin/env python
+#-*- coding:utf-8 -*-
+
+__author__ = 'iambocai'
+
+import json
+import time
+import socket
+import os
+import re
+import telnetlib
+import sys
+import commands
+import urllib2, base64
+
+class RedisStats:
+    _client = None
+    _stat_regex = re.compile(ur'(\w+):([0-9]+\.?[0-9]*)\r')
+
+    def __init__(self,  port='6379', passwd=None, host='127.0.0.1'):
+        self._host = host
+        self._port = port
+        self._pass = passwd
+
+    @property
+    def client(self):
+        if self._client is None:
+            self._client = telnetlib.Telnet(self._host, self._port)
+            if self._pass != '':
+                self._client.write("auth %s\n" % self._pass)
+                self._client.read_until('OK')
+
+        return self._client
+
+    def stats(self):
+        ' Return a dict containing redis stats '
+        self.client.write("info\n")
+        info = self.client.read_until('Key')
+        self.client.close()
+        return dict(self._stat_regex.findall(info))
+
+
+def main():
+    ip = socket.gethostname()
+    timestamp = int(time.time())
+    step = 60
+    insts_list = [ i for i in commands.getoutput("find  /home/work/redis/conf/ -name 'redis-*.conf'" ).split('\n') ]
+    p = []
+    
+    monit_keys = [
+        ('connected_clients','GAUGE'), 
+        ('blocked_clients','GAUGE'), 
+        ('used_memory','GAUGE'),
+        ('used_memory_rss','GAUGE'),
+        ('mem_fragmentation_ratio','GAUGE'),
+        ('total_commands_processed','COUNTER'),
+        ('rejected_connections','COUNTER'),
+        ('expired_keys','COUNTER'),
+        ('evicted_keys','COUNTER'),
+        ('keyspace_hits','COUNTER'),
+        ('keyspace_misses','COUNTER'),
+        ('keyspace_hit_ratio','GAUGE'),
+    ]
+  
+    for inst in insts_list:
+        port = commands.getoutput("sed -n 's/^port *\([0-9]\{4,5\}\)/\\1/p' %s" % inst)
+        passwd = commands.getoutput("sed -n 's/^requirepass *\([^ ]*\)/\\1/p' %s" % inst)
+        metric = "redis"
+        endpoint = ip
+        tags = 'port=%s' % port
+
+        try:
+            conn = RedisStats(port, passwd)
+            stats = conn.stats()
+        except Exception,e:
+            continue
+
+        for key,vtype in monit_keys:
+            if key == 'keyspace_hit_ratio':
+                try:
+                    value = float(stats['keyspace_hits'])/(int(stats['keyspace_hits']) + int(stats['keyspace_misses']))
+                except ZeroDivisionError:
+                    value = 0
+            elif key == 'mem_fragmentation_ratio':
+                value = float(stats[key])
+            else:
+                value = int(stats[key])
+
+            i = {
+                'Metric': '%s.%s' % (metric, key),
+                'Endpoint': endpoint,
+                'Timestamp': timestamp,
+                'Step': step,
+                'Value': value,
+                'CounterType': vtype,
+                'TAGS': tags
+            }
+            p.append(i)
+        
+
+    print json.dumps(p, sort_keys=True,indent=4)
+    method = "POST"
+    handler = urllib2.HTTPHandler()
+    opener = urllib2.build_opener(handler)
+    url = 'http://127.0.0.1:1988/v1/push'
+    request = urllib2.Request(url, data=json.dumps(p) )
+    request.add_header("Content-Type",'application/json')
+    request.get_method = lambda: method
+    try:
+        connection = opener.open(request)
+    except urllib2.HTTPError,e:
+        connection = e
+
+    # check. Substitute with appropriate HTTP code.
+    if connection.code == 200:
+        print connection.read()
+    else:
+        print '{"err":1,"msg":"%s"}' % connection
+if __name__ == '__main__':
+    proc = commands.getoutput(' ps -ef|grep %s|grep -v grep|wc -l ' % os.path.basename(sys.argv[0]))
+    if int(proc) < 5:
+        main()
