@@ -4,7 +4,9 @@ open-falcon redis监控脚本
 系统需求
 --------------------------------
 操作系统：Linux
+
 Python >= 2.6
+
 python-simplejson
 
 主要逻辑
