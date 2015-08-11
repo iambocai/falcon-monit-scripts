@@ -26,7 +26,7 @@ class RedisStats:
     def client(self):
         if self._client is None:
             self._client = telnetlib.Telnet(self._host, self._port)
-            if self._pass != '' and self._pass != None:
+            if self._pass in ['', None]:
                 self._client.write("auth %s\n" % self._pass)
                 self._client.read_until('OK')
 
