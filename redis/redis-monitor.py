@@ -13,6 +13,7 @@ import commands
 import urllib2, base64
 
 class RedisStats:
+    # 如果你是自己编译部署到redis，请将下面的值替换为你到redis-cli路径
     _redis_cli = '/usr/bin/redis-cli'
     _stat_regex = re.compile(ur'(\w+):([0-9]+\.?[0-9]*)\r')
 
@@ -31,7 +32,9 @@ def main():
     ip = socket.gethostname()
     timestamp = int(time.time())
     step = 60
-    insts_list = [ i for i in commands.getoutput("find  /home/work/redis/conf/ -name 'redis-*.conf'" ).split('\n') ]
+    # inst_list中保存了redis配置文件列表，程序将从这些配置中读取port和password，建议使用动态发现的方法获得，如：
+    # inst_list = [ i for i in commands.getoutput("find  /etc/ -name 'redis*.conf'" ).split('\n') ]
+    insts_list = [ '/etc/redis.conf' ]
     p = []
     
     monit_keys = [
