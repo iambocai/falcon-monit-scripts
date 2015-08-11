@@ -71,8 +71,11 @@ def main():
             elif key == 'mem_fragmentation_ratio':
                 value = float(stats[key])
             else:
-                value = int(stats[key])
-
+               try:
+                    value = int(stats[key])
+                except:
+                    continue
+            
             i = {
                 'Metric': '%s.%s' % (metric, key),
                 'Endpoint': endpoint,
