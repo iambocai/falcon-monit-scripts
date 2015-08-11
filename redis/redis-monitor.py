@@ -8,35 +8,22 @@ import time
 import socket
 import os
 import re
-import telnetlib
 import sys
 import commands
 import urllib2, base64
 
 class RedisStats:
-    _client = None
+    _redis_cli = '/usr/bin/redis-cli'
     _stat_regex = re.compile(ur'(\w+):([0-9]+\.?[0-9]*)\r')
 
     def __init__(self,  port='6379', passwd=None, host='127.0.0.1'):
-        self._host = host
-        self._port = port
-        self._pass = passwd
-
-    @property
-    def client(self):
-        if self._client is None:
-            self._client = telnetlib.Telnet(self._host, self._port)
-            if self._pass in ['', None]:
-                self._client.write("auth %s\n" % self._pass)
-                self._client.read_until('OK')
-
-        return self._client
+        self._cmd = '%s -h %s -p %s info' % (self._redis_cli, host, port)
+        if passwd not in ['', None]:
+            self._cmd = "%s -a %s" % (self._cmd, passwd )
 
     def stats(self):
         ' Return a dict containing redis stats '
-        self.client.write("info\n")
-        info = self.client.read_until('Key')
-        self.client.close()
+        info = commands.getoutput(self._cmd)
         return dict(self._stat_regex.findall(info))
 
 
