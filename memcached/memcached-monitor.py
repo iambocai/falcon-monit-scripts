@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 #-*- coding:utf-8 -*-
 
 __author__ = 'iambocai'
@@ -66,7 +66,7 @@ def main():
     ip = socket.gethostname()
     timestamp = int(time.time())
     step = 60
-    insts_list = [ os.path.basename(i) for i in commands.getoutput(''' ps -ef |grep memcached|grep -v grep |sed -n 's/.* *-p *\([0-9]\{1,5\}\).*/\1/p ''' ).split('\n') ]
+    insts_list = [ os.path.basename(i) for i in commands.getoutput(''' ps -ef |grep memcached|grep -v grep |sed -n 's/.* *-p *\([0-9]\{1,5\}\).*/\1/p' ''' ).split('\n') ]
     data = []
 
     gauges = [ 'get_hit_ratio', 'incr_hit_ratio', 'decr_hit_ratio', 'delete_hit_ratio', 'usage', 'curr_connections', 'total_connections', 'bytes', 'pointer_size', 'uptime', 'limit_maxbytes', 'threads', 'curr_items', 'total_items', 'connection_structures' ]
