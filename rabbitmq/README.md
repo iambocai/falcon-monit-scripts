@@ -27,7 +27,8 @@ rabbitmq.publish_rate|name(Queue名字)|GAUGE|publish的速率|
 使用方法
 --------------------------------
 1. 根据实际部署情况，修改15,16行的rabbitmq-server管理端口和登录用户名密码
-2. 将脚本加入crontab即可
+2. 确认1中配置的rabbitmq用户有你想监控的queue/vhosts的权限
+3. 将脚本加入crontab即可
 
 
 授权类型：MIT
