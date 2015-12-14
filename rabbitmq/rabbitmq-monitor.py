@@ -13,7 +13,8 @@ keys = ('messages_ready', 'messages_unacknowledged')
 rates = ('ack', 'deliver', 'deliver_get', 'publish')
 
 request = urllib2.Request("http://%s:15672/api/queues" %ip)
-base64string = base64.encodestring('guest:guest').replace('\n', '')
+# see #issue4
+base64string = base64.encodestring('guest:guest')
 request.add_header("Authorization", "Basic %s" % base64string)   
 result = urllib2.urlopen(request)
 data = json.loads(result.read())
