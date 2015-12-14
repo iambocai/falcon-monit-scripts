@@ -74,7 +74,7 @@ def main():
             elif key == 'mem_fragmentation_ratio':
                 value = float(stats[key])
             else:
-               try:
+                try:
                     value = int(stats[key])
                 except:
                     continue
