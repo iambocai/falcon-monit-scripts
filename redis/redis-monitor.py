@@ -18,9 +18,9 @@ class RedisStats:
     _stat_regex = re.compile(ur'(\w+):([0-9]+\.?[0-9]*)\r')
 
     def __init__(self,  port='6379', passwd=None, host='127.0.0.1'):
-        self._cmd = '%s -h %s -p %s info' % (self._redis_cli, host, port)
+        self._cmd = '%s -h %s -p %s' % (self._redis_cli, host, port)
         if passwd not in ['', None]:
-            self._cmd = "%s -a %s" % (self._cmd, passwd )
+            self._cmd = "%s -a %s info" % (self._cmd, passwd )
 
     def stats(self):
         ' Return a dict containing redis stats '
@@ -34,7 +34,7 @@ def main():
     step = 60
     # inst_list中保存了redis配置文件列表，程序将从这些配置中读取port和password，建议使用动态发现的方法获得，如：
     # inst_list = [ i for i in commands.getoutput("find  /etc/ -name 'redis*.conf'" ).split('\n') ]
-    insts_list = [ '/etc/redis.conf' ]
+    insts_list = [ '/etc/redis/redis.conf' ]
     p = []
     
     monit_keys = [
