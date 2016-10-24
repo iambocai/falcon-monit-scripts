@@ -18,9 +18,9 @@ class RedisStats:
     _stat_regex = re.compile(ur'(\w+):([0-9]+\.?[0-9]*)\r')
 
     def __init__(self,  port='6379', passwd=None, host='127.0.0.1'):
-        self._cmd = '%s -h %s -p %s' % (self._redis_cli, host, port)
+        self._cmd = '%s -h %s -p %s info' % (self._redis_cli, host, port)
         if passwd not in ['', None]:
-            self._cmd = "%s -a %s info" % (self._cmd, passwd )
+            self._cmd = '%s -h %s -p %s -a %s info' % (self._redis_cli, host, port, passwd)
 
     def stats(self):
         ' Return a dict containing redis stats '
@@ -111,5 +111,6 @@ def main():
         print '{"err":1,"msg":"%s"}' % connection
 if __name__ == '__main__':
     proc = commands.getoutput(' ps -ef|grep %s|grep -v grep|wc -l ' % os.path.basename(sys.argv[0]))
+    sys.stdout.flush()
     if int(proc) < 5:
         main()
