@@ -66,14 +66,20 @@ def main():
             continue
 
         for key,vtype in monit_keys:
+            #一些老版本的redis中info输出的信息很少，如果缺少一些我们需要采集的key就跳过
+            if key not in stats.keys():
+                continue
+            #计算命中率
             if key == 'keyspace_hit_ratio':
                 try:
                     value = float(stats['keyspace_hits'])/(int(stats['keyspace_hits']) + int(stats['keyspace_misses']))
                 except ZeroDivisionError:
                     value = 0
+            #碎片率是浮点数
             elif key == 'mem_fragmentation_ratio':
                 value = float(stats[key])
             else:
+                #其他的都采集成counter，int
                 try:
                     value = int(stats[key])
                 except:
